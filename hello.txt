@@ -1,0 +1,401 @@
+Practical 1 - Socket Programming
+
+
+TCP Server
+import socket
+
+s = socket.socket()
+s.bind(("127.0.0.1", 5000))
+s.listen(1)
+print("TCP Server Ready")
+conn, addr = s.accept()
+
+while True:
+    data = conn.recv(1024).decode()
+    print("Client:", data)
+    msg = input("Server: ")
+    conn.send(msg.encode())
+
+
+TCP Client
+import socket
+
+s = socket.socket()
+s.connect(("127.0.0.1", 5000))
+
+while True:
+    msg = input("Client: ")
+    s.send(msg.encode())
+    print("Server:", s.recv(1024).decode())
+
+UDP Server (Short Version)
+import socket
+
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+s.bind(("127.0.0.1", 6000))
+print("UDP Server Ready")
+
+while True:
+   data, addr = s.recvfrom(1024)
+   print("Client:", data.decode())
+   msg = input("Server: ")
+   s.sendto(msg.encode(), addr)
+
+
+UDP Client (Short Version)
+import socket
+
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+while True:
+    msg = input("Client: ")
+    s.sendto(msg.encode(), ("127.0.0.1", 6000))
+
+    data, _ = s.recvfrom(1024)
+    print("Server:", data.decode())
+
+
+Practical 2 - RPC Implementation
+
+
+RPC Client
+import xmlrpc.client
+
+# Connect to RPC server
+proxy = xmlrpc.client.ServerProxy("http://localhost:8000/")
+
+# Call remote methods
+print("Addition:", proxy.add(10, 5))
+print("Subtraction:", proxy.subtract(10, 5))
+print("Multiplication:", proxy.multiply(10, 5))
+print("Division:", proxy.divide(10, 5))
+
+RPC Server
+from xmlrpc.server import SimpleXMLRPCServer
+
+server = SimpleXMLRPCServer(("localhost", 8000))
+print("RPC Server is running on port 8000...")
+
+# Define remote functions
+def add(a, b):
+    return a + b
+
+server.register_function(add, "add")
+server.serve_forever()
+
+
+Practical 3 - Clock Synchronization
+
+import time 
+import random 
+
+class TimeServer:
+    def get_time(self):
+        return time.time()
+    
+class Client:
+    def __init__(self,clock_offset):
+        self.clock_offset = clock_offset
+        
+    def get_local_time(self):
+        return time.time() + self.clock_offset
+    
+    def sync(self,server):
+        t1 = self.get_local_time()
+        
+        time.sleep(random.uniform(0.1,0.5))
+        
+        server_time = server.get_time()
+        t2 = self.get_local_time()
+        
+        rtt = t2 - t1
+        adjusted_time = server_time + (rtt/2)
+        self.clock_offset = adjusted_time - time.time()
+        
+        print("New Client time is ",self.get_local_time())
+        
+
+if __name__ == "__main__":
+    server = TimeServer()
+    client = Client(clock_offset=-5)
+    
+    print("Initital time is ",server.get_time())
+    print("Client now time ",client.get_local_time())
+    client.sync(server)
+    
+   
+
+
+  
+Practical 4 - Leader Election Algorithm
+
+Multiprocessing
+processes = {1: 1, 2: 1, 3: 0, 4: 1, 5: 1}
+
+
+def bully(initiator):
+    active = [p for p in processes if p > initiator and processes[p]]
+
+    if active:
+        for p in active:
+            print(f"{initiator} -> ELECTION -> {p}")
+        coord = max(p for p in processes if processes[p])
+    else:
+        coord = initiator
+
+    print("Coordinator:", coord)
+
+
+def ring(initiator):
+    pids = list(processes.keys())
+    i = pids.index(initiator)
+    msg = []
+
+    while True:
+        pid = pids[i]
+        if processes[pid]:
+            print(f"{pid} passes message")
+            msg.append(pid)
+
+        i = (i + 1) % len(pids)
+
+        if pids[i] == initiator:
+            break
+
+    print("Coordinator:", max(msg))
+
+
+while True:
+    print("\n1.Bully  2.Ring  3.Exit")
+    ch = int(input("Choice: "))
+
+    if ch == 3:
+        break
+
+    for p, s in processes.items():
+        print(f"Process {p}: {'Active' if s else 'Down'}")
+    init = int(input("Initiator: "))
+
+    if ch == 1:
+        bully(init)
+    else:
+        ring(init)
+
+
+
+Practical 5 - Distributed Mutual Exclusion
+
+# Lamport's Mutual Exclusion Algorithm (Simulation)
+
+import heapq
+
+class Process:
+    def __init__(self, pid):
+        self.pid = pid
+        self.clock = 0
+        self.queue = []
+
+    def request_cs(self):
+        self.clock += 1
+        timestamp = self.clock
+        heapq.heappush(self.queue, (timestamp, self.pid))
+        print(f"Process {self.pid} requests CS at time {timestamp}")
+        return (timestamp, self.pid)
+
+    def receive_request(self, request):
+        heapq.heappush(self.queue, request)
+        self.clock = max(self.clock, request[0]) + 1
+
+    def release_cs(self):
+        heapq.heappop(self.queue)
+        print(f"Process {self.pid} releases CS")
+
+    def can_enter_cs(self):
+        return self.queue[0][1] == self.pid
+
+
+
+# Create processes
+p1 = Process(1)
+p2 = Process(2)
+p3 = Process(3)
+
+# Simulate requests
+req1 = p1.request_cs()
+p2.receive_request(req1)
+p3.receive_request(req1)
+
+req2 = p2.request_cs()
+p1.receive_request(req2)
+p3.receive_request(req2)
+
+# Check who enters CS
+if p1.can_enter_cs():
+    print("Process 1 enters Critical Section")
+    p1.release_cs()
+
+if p2.can_enter_cs():
+    print("Process 2 enters Critical Section")
+    p2.release_cs()
+
+
+
+
+
+Practical 6 - Parallel Matrix Multplication
+
+import multiprocessin
+
+SIZE = 3
+
+A = [[i + j for j in range(SIZE)] for i in range(SIZE)]
+B = [[i * j for j in range(SIZE)] for i in range(SIZE)]
+
+# Function to calculate one row
+def multiply(i):
+    return [
+        sum(A[i][k] * B[k][j] for k in range(SIZE))
+        for j in range(SIZE)
+    ]
+
+if __name__ == "__main__":
+
+    # Print matrices
+    print("Matrix A:")
+    for row in A:
+        print(row)
+
+    print("\nMatrix B:")
+    for row in B:
+        print(row)
+
+    # Sequential Multiplication
+    t1 = time.time()
+    seq = [multiply(i) for i in range(SIZE)]
+    print("\nSequential Time:", time.time() - t1)
+
+    # Parallel Multiplication
+    t2 = time.time()
+
+    with multiprocessing.Pool() as p:
+        result = p.map(multiply, range(SIZE))
+
+    # Print result matrix
+    print("\nResult Matrix:")
+    for row in result:
+        print(row)
+
+    print("\nParallel Time:", time.time() - t2)
+
+
+
+Practical 7 - Parallel Merge Sort
+
+from multiprocessing import Process, Queue
+
+def merge(left, right):
+    result = []
+    i = j = 0
+    while i < len(left) and j < len(right):
+        if left[i] < right[j]: result.append(left[i]); i += 1
+        else: result.append(right[j]); j += 1
+    return result + left[i:] + right[j:]
+
+def merge_sort(arr):
+    if len(arr) <= 1: return arr
+    mid = len(arr) // 2
+    return merge(merge_sort(arr[:mid]), merge_sort(arr[mid:]))
+
+def parallel_sort(arr, q):
+    q.put(merge_sort(arr))
+
+if __name__ == "__main__":
+    arr = [8, 3, 7, 4, 9, 2, 6, 5]
+    mid = len(arr) // 2
+    q1, q2 = Queue(), Queue()
+    p1 = Process(target=parallel_sort, args=(arr[:mid], q1))
+    p2 = Process(target=parallel_sort, args=(arr[mid:], q2))
+    p1.start(); p2.start()
+    sorted_arr = merge(q1.get(), q2.get())
+    p1.join(); p2.join()
+    print("Original:", arr)
+    print("Sorted:", sorted_arr)
+
+
+
+Practical 8 - Load Balancing Simulation
+
+import random
+
+tasks = [random.randint(1,10) for _ in range(10)]
+print(f"Tasks : {tasks}")
+nodes = [0,0,0]
+
+for i,t in enumerate(tasks):
+    nodes[i % len(nodes)] += t
+    
+print(f"Static Load Balancing {nodes}")
+
+nodes = [0,0,0]
+
+for t in tasks:
+   nodes[nodes.index(min(nodes))] += t
+   
+print(f"Dynamic Load balancing {nodes}")
+
+
+
+
+Practical 9 - Fault Tolerance Mechanism
+
+import random 
+
+last = 0
+try:
+    f = open("log.txt","r")
+    last = int(f.read())
+    f.close()
+    
+except:
+    last = 0
+
+print(f"Starting point is : {last}")
+
+try:
+    for i in range(last +1,11):
+        print("Step",i)
+        
+        f = open("log.txt","w")
+        f.write(str(i))
+        f.close()
+        
+        if random.random() < 0.3:
+            raise Exception("Crasheddd")
+except:
+    print("Failure OCcured, please restart")
+
+
+
+
+Practical 10 - MapReduce Word Count
+
+ch = input("1.Local  2.PySpark : ")
+if ch == "1":
+    try:
+        words = open("input.txt").read().lower().split()
+        [print(word,":",words.count(word)) for word in set(words)]
+    except: print("File not found")
+else:
+    try:
+        from pyspark import SparkContext
+        sc = SparkContext("local[*]","WordCount")
+        rdd = sc.textFile("input.txt")
+        word_counts = rdd.flatMap(lambda line: line.split()) \
+                         .map(lambda word: (word.lower(), 1)) \
+                         .reduceByKey(lambda a, b: a + b) \
+                         .collect()
+        [print(word,":",count) for word,count in word_counts]
+        sc.stop()
+    except Exception as e: print(e)
+
