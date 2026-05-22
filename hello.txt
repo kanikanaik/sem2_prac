@@ -1,348 +1,672 @@
-Practical 01 - Searching Algorithms
+BT Practicals
 
-BFS - 
-from collections import deque
+Practical 01 - Install and Configure Ethereum Private Network
 
-def bfs(graph,start):
-    visited = set()
-    queue = deque([start])
-   
-    while queue:
-        node = queue.popleft()
-       
-        if node not in visited:
-            print(node,end=" ")
-            visited.add(node)
-           
-            for neighbor in graph[node]:
-                if neighbor not in visited:
-                    queue.append(neighbor)
+https://archive.trufflesuite.com/ganache/
 
+Download Ganache 
 
-graph = {
-    "A" : ["B","C"],
-    "B" : ["D","E"],
-    "C" : ["F"],
-    "D" : [],
-    "E" : [],
-    "F" : [],
-}
-print("BFS GRAPH : ")
-bfs(graph,"A")
+Open Metamask -> Login -> Settings -> Networks -> Add custom network
+Enter details like 
+Network name - Local Ganache 
+RPC URL - copy from Ganache http://127.0.0.1:7545
+Chain Id - 1337
+Currency - ETH
 
-DFS - 
-def dfs(graph,start,visited =set()):
-    if start not in visited:
-        print(start,end=" ")
-        visited.add(start)
-       
-        for neighbor in graph[start]:
-            dfs(graph,neighbor,visited)
+Then Enter
+
+Now import two accounts 
+Get private key from ganache 
+And perform transaction
 
 
-graph = {
-    "A" : ["B","C"],
-    "B" : ["D","E"],
-    "C" : ["F"],
-    "D" : [],
-    "E" : [],
-    "F" : [],
+Practical 02 - Develop and Deploy Basic Smart Contracts
+Go to this url -> https://remix.live/  -> Launch App 
+
+Open Remix -> Create file in contracts folder
+
+HelloWorld.sol
+// SPDX-License-Identifier: MIT
+pragma solidity  0.8.17;
+
+contract HelloWorld{
+    string public greet = "HEllo world";
 }
 
+Compile The file 
+Now go to Deploy sidebar -> Choose environment and select metamask (Load Etheriums from Ganache for this, refer prac 1) -> Now make sure your using local ganache then Deploy the contract
 
-print("DFS GRAPH : ")
-dfs(graph,"A")
-
-A-Star
-
-import heapq
-def a_star(graph, start, goal, heuristic):
-    open_list = []
-    heapq.heappush(open_list, (0, start))
+Now after deployment check if transaction has occurred 
+Then in deployed contracts -> selection function as greet and call it - >will return Hello World
 
 
-    g_cost = {start: 0}
-    visited = set()
+Practical 03 - Create a simple cryptocurrency using Blockchain logic
 
-    while open_list:
-        current = heapq.heappop(open_list)[1]
+Go to Chainlist - > Select Eth Sepolia -> Connect to metamask -> if sepolia not ther in custom network then add it (You already have it)
 
-        if current == goal:
-            print("Goal reached!")
-            return
+Go to OpenZeplin -> Create your own token copy it 
+Paste MyToken.sol into remix 
+Compile -> Deploying Enter recipient address and then deploy
 
-        visited.add(current)
-
-
-        for neighbor, cost in graph[current]:
-            new_cost = g_cost[current] + cost
-
-
-            if neighbor not in g_cost or new_cost < g_cost[neighbor]:
-                g_cost[neighbor] = new_cost
-                f_cost = new_cost + heuristic[neighbor]
-                heapq.heappush(open_list, (f_cost, neighbor))
+And then interact with functions 
+Check totalSupply() — should show 1,000,000 MYC (with 18 decimals)
+Check balanceOf(owner) — should show the total supply
+Test transfer():
+Enter recipient address and amount
+Click "transact" and confirm in MetaMask
+Verify the recipient's balance using balanceOf()
 
 
-graph = {
-    'A': [('B', 1), ('C', 3)],
-    'B': [('D', 1)],
-    'C': [('D', 1)],
-    'D': []
+Practical 04 - Interact with deployed smart contracts on bt using Web3/Ether.js
+
+Ensure you have node before starting this practical 
+
+Make 5 Files
+StoreNumber.sol
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.8.7;
+
+contract StoreNumberTest {
+    uint256 public number = 1;
+
+    function updateNumber(uint256 _number) external {
+        number = _number;
+    }
+}
+
+TestToken.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.7;
+
+contract TestToken {
+    string public name = "Test Token";
+    string public symbol = "TTK";
+    uint8 public decimals = 18;
+    uint256 public totalSupply;
+    mapping(address => uint256) public balanceOf;
+
+    constructor(uint256 _initialSupply) {
+        totalSupply = _initialSupply * 10 ** uint256(decimals);
+        balanceOf[msg.sender] = totalSupply;
+    }
+
+    function transfer(address _to, uint256 _amount) public returns (bool) {
+        require(balanceOf[msg.sender] >= _amount, "Insufficient balance");
+        balanceOf[msg.sender] -= _amount;
+        balanceOf[_to] += _amount;
+        return true;
+    }
+}
+
+GoldPunk.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.7;
+
+contract GoldPunk {
+    string public name = "Gold Punk NFT";
+    uint256 public totalNFTs;
+    mapping(uint256 => address) public ownerOf;
+
+    function mint() public {
+        totalNFTs += 1;
+        ownerOf[totalNFTs] = msg.sender;
+    }
+
+    function transferNFT(address _to, uint256 _tokenId) public {
+        require(ownerOf[_tokenId] == msg.sender, "Not owner");
+        ownerOf[_tokenId] = _to;
+    }
+}
+
+SlotMachine.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.7;
+
+contract SlotMachine {
+    uint256 public balance;
+    event Played(address player, uint256 result);
+
+    function deposit() public payable {
+        balance += msg.value;
+    }
+
+    function play() public payable returns (uint256) {
+        require(msg.value > 0, "Send ETH to play");
+        uint256 random = uint256(
+            keccak256(abi.encodePacked(block.timestamp, msg.sender))
+        ) % 10;
+        emit Played(msg.sender, random);
+        if (random == 7) {
+            payable(msg.sender).transfer(msg.value * 2);
+        }
+        return random;
+    }
+}
+
+SlotMachineV2.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.7;
+
+contract SlotMachineV2 {
+    address public owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    receive() external payable {}
+
+    function withdraw() public onlyOwner {
+        payable(owner).transfer(address(this).balance);
+    }
+}
+
+Compile All file and we have to deploy StoreNumber.sol and connect wallet 
+
+Now Go to VS Code and 
+mkdir web3-practical
+cd web3-practical
+npm init -y
+npm install ethers
+npm install vite
+
+
+REplace this in package.json
+"scripts": {
+  "dev": "vite"
+}
+
+cReate this 
+index.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web3 Practical</title>
+</head>
+<body>
+    <h2>Store Number DApp</h2>
+    <button onclick="connectWallet()">Connect Wallet</button>
+    <button onclick="getNumber()">Get Number</button>
+    <button onclick="setNumber()">Update Number</button>
+
+    <script type="module" src="/index.js"></script>
+</body>
+</html>
+
+INDEX.js
+import { ethers } from "ethers";
+
+const contractABI = [COPY_ABI];
+const contractAddress = "PASTE_CONTRACT_ADRRS";
+let provider;
+let signer;
+let contract;
+
+window.connectWallet = async function () {
+  if (!window.ethereum) {
+    alert("Install Metamask");
+    return;
+  }
+
+  provider = new ethers.BrowserProvider(window.ethereum);
+  signer = await provider.getSigner();
+
+const network = await provider.getNetwork();
+  if (network.chainId !== 11155111n) {
+    alert("wrong network please switch to sepolia");
+    return;
+  }
+
+  const code = await provider.getCode(contractAddress);
+  if (code === "0x") {
+    alert("No code found at this address");
+    return;
+  }
+
+  contract = new ethers.Contract(contractAddress, contractABI, signer);
+  alert("wallet connected");
+};
+
+window.getNumber = async function () {
+  if (!contract) {
+    alert("connect wallet first");
+    return;
+  }
+  try {
+    const number = await contract.number();
+    alert(`Stored Number: ${number.toString()}`);
+  } catch (err) {
+    alert(`Failed ${err}`);
+  }
+};
+
+window.updateNumber = async function () {
+  if (!contract) {
+    alert("connect wallet first");
+    return;
+  }
+  try {
+    const newNumber = prompt("New Number");
+    const tx = await contract.updateNumber(newNumber);
+    await tx.wait();
+    alert("Number updated");
+  } catch (err) {
+    alert(`Failed ${err}`);
+  }
+};
+
+Practical 05 - Perform Wallet Creation and Transaction
+
+Step 2: Connect to Sepolia Testnet via ChainList
+Visit https://chainlist.org
+Connect MetaMask when prompted
+Search for "Sepolia" or "Hoodi"
+Click "Add Chain" next to Ethereum Sepolia or Ethereum Hoodi
+Approve the network switch in MetaMask
+Verify MetaMask shows "Sepolia" or "Ethereum Hoodi" in the network dropdown
+
+Step 3: Obtain Test Tokens from Faucet
+Visit A faucet to mine
+Connect your MetaMask wallet or paste your wallet address
+Request test ETH (usually up to 0.5 ETH per request)
+Wait for the transaction to be processed
+Verify the balance in MetaMask
+
+Step 4: Send a Test Transaction
+In MetaMask, ensure Sepolia network is selected
+Click "Send"
+Enter the recipient's wallet address (can use a second MetaMask account)
+Enter the amount (e.g., 0.01 ETH)
+Review the gas fee estimate
+Click "Confirm"
+Wait for the transaction to be mined (usually 15-30 seconds)
+
+Step 5: Verify the Transaction
+In MetaMask, click "Activity" tab
+The transaction should show as "Confirmed"
+Click on the transaction to view details
+Note the Transaction Hash (Tx Hash)
+Copy the Tx Hash and search on https://sepolia.etherscan.io or https://eth-hoodi.blockscout.com/
+
+Step 6: Explore Transaction Details on Etherscan
+Paste the Tx Hash on Sepolia Etherscan
+View:
+Transaction status (Success/Pending/Failed)
+Block number and timestamp
+From and To addresses
+Amount transferred
+Gas fee (Gas Used × Gas Price)
+Transaction Hash
+ 
+Practical 06 - Study Block Data Using a Blockchain Explorer
+
+Step 1: Open Sepolia Blockchain Explorer
+Open a web browser
+Navigate to https://sepolia.etherscan.io
+Observe the dashboard showing:
+Latest blocks
+Recent transactions
+Network statistics
+Step 2: Search Using a Wallet Address
+Copy a wallet address (from MetaMask or a previous transaction)
+Paste it in the search bar at the top
+Press Enter or click the search icon
+Observe:
+ETH balance
+Token balances
+Total number of transactions
+Recent transaction history
+Step 3: View a Block
+Click on a recent block number from the dashboard
+Study the following block data:
+Block Height: The block number
+Timestamp: When the block was mined
+Transactions: Number of transactions in this block
+Fee Recipient: Validator who proposed the block
+Gas Used: Actual gas consumed
+Gas Limit: Maximum gas allowed
+Base Fee: Minimum gas price
+Hash: Unique block identifier
+Parent Hash: Previous block's hash (showing the chain link)
+Step 4: View a Transaction
+Click on any transaction hash
+Study the transaction details:
+Transaction Hash: Unique identifier
+Status: Success / Pending / Failed
+Block: Block number containing this transaction
+Timestamp: When confirmed
+From: Sender address
+To: Recipient address (or contract address)
+Value: Amount of ETH transferred
+Gas Limit: Maximum gas allocated
+Gas Used: Actual gas consumed
+Gas Price: Price per unit of gas
+Transaction Fee: Total fee (Gas Used × Gas Price)
+
+Practical No. 7 — Simulate a Blockchain Consensus Mechanism Using a Smart Contract
+
+Consensus.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract ConsensusSimulation {
+    address[] public validators;
+    mapping(address => bool) public hasVoted;
+    mapping(address => bool) public voteChoice;
+    uint public approveCount;
+    uint public rejectCount;
+    bool public consensusReached;
+
+    constructor() {
+        validators.push(0x8589070a85Af9ca171d85F8210103ea1b3Ff1820); // Account 1
+        validators.push(0xC502315EeaD844cc9e2E9897527607E3B2101e03); // Account 2
+    }
+
+    function vote(bool approve) public {
+        require(isValidator(msg.sender), "Not a validator");
+        require(!hasVoted[msg.sender], "Already voted");
+        hasVoted[msg.sender] = true;
+        voteChoice[msg.sender] = approve;
+        if (approve) {
+            approveCount++;
+        } else {
+            rejectCount++;
+        }
+        checkConsensus();
+    }
+
+    function isValidator(address user) public view returns (bool) {
+        for (uint i = 0; i < validators.length; i++) {
+            if (validators[i] == user) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function checkConsensus() internal {
+        if (approveCount > validators.length / 2) {
+            consensusReached = true;
+        }
+    }
+
+    function getVote(address user) public view returns (string memory) {
+        if (!hasVoted[user]) {
+            return "Not Voted";
+        }
+        if (voteChoice[user]) {
+            return "Approved";
+        } else {
+            return "Rejected";
+        }
+    }
+}
+
+Compile it and Deploy
+
+Step 3: Compile the Contract
+Go to "Solidity Compiler" tab
+Select compiler version 0.8.x
+Click "Compile Consensus.sol"
+Verify no compilation errors
+Step 4: Deploy the Contract
+Option A: Remix VM (for testing)
+
+Go to "Deploy & Run Transactions" tab
+Environment: "Remix VM"
+Click "Deploy"
+Option B: Sepolia Testnet (for real simulation)
+
+Set Environment to "Injected Provider — MetaMask"
+Ensure Sepolia network is selected in MetaMask
+Click "Deploy" and confirm the transaction
+Step 5: Simulate Voting
+In Remix, under "Deployed Contracts", expand ConsensusSimulation
+First Vote:
+
+Select Account 1
+Enter true in the vote function
+Click "transact"
+Second Vote:
+
+Change to Account 2
+Enter true or false
+Click "transact"
+Step 6: Observe Results
+After voting, check these values:
+
+approveCount: Shows how many voted true
+rejectCount: Shows how many voted false
+hasVoted(address): Enter an address → returns true/false
+getVote(address): Returns "Approved", "Rejected", or "Not Voted"
+consensusReached: true if more than 50% approved
+Step 7: Understanding the Logic
+With 2 validators, consensus requires >1 approval (i.e., both must approve)
+If both vote true → consensusReached = true
+If one votes true and one false → consensusReached = false
+This demonstrates majority agreement in blockchain consensus
+
+
+Practical No. 8 - DApp with Auction
+
+Auction.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract Auction {
+    address public owner;
+    uint public auctionEndTime;
+    address public highestBidder;
+    uint public highestBid;
+    mapping(address => uint) public pendingReturns;
+    bool public ended;
+
+    constructor(uint _biddingTime) {
+        owner = msg.sender;
+        auctionEndTime = block.timestamp + _biddingTime;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner allowed");
+        _;
+    }
+
+    modifier auctionActive() {
+        require(block.timestamp < auctionEndTime, "Auction already ended");
+        _;
+    }
+
+    modifier auctionEnded() {
+        require(block.timestamp >= auctionEndTime, "Auction not yet ended");
+        _;
+    }
+
+    function bid() public payable auctionActive {
+        require(msg.value > highestBid, "There already is a higher bid");
+        if (highestBid != 0) {
+            pendingReturns[highestBidder] += highestBid;
+        }
+        highestBidder = msg.sender;
+        highestBid = msg.value;
+    }
+
+function withdraw() public {
+        uint amount = pendingReturns[msg.sender];
+        require(amount > 0, "No funds to withdraw");
+        
+        pendingReturns[msg.sender] = 0;
+        
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        require(success, "Withdrawal failed");
+    }
+
+    function endAuction() public auctionEnded {
+        require(!ended, "Auction already ended");
+        
+        ended = true;
+        
+        (bool success, ) = payable(owner).call{value: highestBid}("");
+        require(success, "Transfer to owner failed");
+    }
+
+    function getTimeLeft() public view returns (uint) {
+        if (block.timestamp >= auctionEndTime) {
+            return 0;
+        } else {
+            return auctionEndTime - block.timestamp;
+        }
+    }
+}
+
+Create Auction.sol in Remix IDE
+Compile using Solidity Compiler tab (version 0.8.x)
+Go to "Deploy & Run Transactions" tab
+Environment: "Injected Provider — MetaMask" (Sepolia)
+Enter bidding time in seconds (e.g., 300 for 5 minutes)
+Click "Deploy" and confirm in MetaMask
+Copy the Contract Address and ABI
+
+Part 4: Testing the DApp
+Deploy the contract on Sepolia testnet
+Open the HTML file in a browser
+Connect the DApp to MetaMask (click "Connect" / approve)
+Try Bidding: Enter an amount in Wei and click Bid
+Get Info: View highest bid, bidder, and time remaining
+Try Withdraw: Withdraw if you were outbid
+End Auction: Only the owner can end the auction after time expires
+
+Practical No. 9 — Design a Use-Case for Blockchain in Supply Chain
+
+SupplyChain.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract SupplyChain {
+    enum State { Created, Shipped, Delivered }
+
+    struct Product {
+        uint id;
+        string name;
+        address manufacturer;
+        State state;
+    }
+
+    mapping(uint => Product) public products;
+
+    function createProduct(uint _id, string memory _name) public {
+        products[_id] = Product(_id, _name, msg.sender, State.Created);
+    }
+
+    function shipProduct(uint _id) public {
+        require(products[_id].state == State.Created, "Not in Created state");
+        products[_id].state = State.Shipped;
+    }
+
+    function deliverProduct(uint _id) public {
+        require(products[_id].state == State.Shipped, "Not in Shipped state");
+        products[_id].state = State.Delivered;
+    }
+
+    function getProduct(uint _id) public view returns (uint, string memory, address, State) {
+        Product memory p = products[_id];
+        return (p.id, p.name, p.manufacturer, p.state);
+    }
+}
+
+index.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supply Chain DApp</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h2>Supply Chain DApp</h2>
+    <div class="container">
+        <h3>Create Product</h3>
+        <input type="number" id="pid" placeholder="Product ID">
+        <input type="text" id="pname" placeholder="Product Name">
+        <button onclick="createProduct()">Create</button>
+
+        <h3>Ship Product</h3>
+        <input type="number" id="shipId" placeholder="Product ID">
+        <button onclick="shipProduct()">Ship</button>
+
+        <h3>Deliver Product</h3>
+        <input type="number" id="deliverId" placeholder="Product ID">
+        <button onclick="deliverProduct()">Deliver</button>
+
+        <h3>Get Product Info</h3>
+        <input type="number" id="getId" placeholder="Product ID">
+        <button onclick="getProduct()">Get Info</button>
+        <p id="output"></p>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+
+CSS
+<script src="https://cdn.tailwindcss.com"></script> 
+
+app.js
+let web3;
+let contract;
+let account;
+const abi = [ PASTE_ABI ];
+const address = "PASTE_CONTRACT_ADDRESS";
+
+window.onload = async () => {
+    if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const accounts = await web3.eth.getAccounts();
+        account = accounts[0];
+        contract = new web3.eth.Contract(abi, address);
+        console.log("Connected:", account);
+    } else {
+        alert("Install MetaMask!");
+    }
+};
+
+async function createProduct() {
+    const id = document.getElementById("pid").value;
+    const name = document.getElementById("pname").value;
+    await contract.methods.createProduct(id, name).send({ from: account });
+    alert("Product Created!");
+}
+
+async function shipProduct() {
+    const id = document.getElementById("shipId").value;
+    await contract.methods.shipProduct(id).send({ from: account });
+    alert("Product Shipped!");
+}
+
+async function deliverProduct() {
+    const id = document.getElementById("deliverId").value;
+    await contract.methods.deliverProduct(id).send({ from: account });
+    alert("Product Delivered!");
+}
+
+async function getProduct() {
+    const id = document.getElementById("getId").value;
+    const product = await contract.methods.getProduct(id).call();
+    const stateMap = ["Created", "Shipped", "Delivered"];
+    document.getElementById("output").innerText =
+        "ID: " + product[0] +
+        "\nName: " + product[1] +
+        "\nManufacturer: " + product[2] +
+        "\nStatus: " + stateMap[product[3]];
 }
 
 
-heuristic = {
-    'A': 3,
-    'B': 1,
-    'C': 1,
-    'D': 0
-}
-
-a_star(graph, 'A', 'D', heuristic)
-
-
-Practical 02 - Rule based system
-
-print("Medical System for Diagnosis")
-
-
-fever = input("DO you have fever ? (yes/no)")
-cough = input("DO you have cough ? (yes/no)")
-rash = input("DO you have rash ? (yes/no)")
-headache = input("DO you have headache ? (yes/no)")
-vommiting = input("DO you have vomitting ? (yes/no)")
-
-
-if fever == "yes" and cough == "yes":
-    print("I thinnk you have the FLU")
-elif fever == "yes" and rash == "yes":
-    print("I think you have measles")
-elif headache == "yes" and vommiting == "yes":
-    print("You have migraine")
-else:
-    print("Diagnosis undetected !")
-
-Practical 03 - Linear and Logistic Regression
-
-Linear - 
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
-
-
-X = np.array([[1],[2],[3],[4],[5]])
-y = np.array([15000,25000,35000,45000,55000])
-
-
-model = LinearRegression()
-model.fit(X,y)
-
-
-predict = model.predict([[7]])
-print(f"Prediction for 7 is {predict}")
-
-
-plt.scatter(X,y)
-plt.plot(X,model.predict(X))
-plt.xlabel("Experience")
-plt.ylabel("Salary")
-plt.show()
-
-
-
-
-
-Logistic 
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.linear_model import LogisticRegression
-
-
-X = np.array([[1],[2],[3],[4],[5]])
-y = np.array([0,1,0,1,0])
-
-
-model = LogisticRegression()
-model.fit(X,y)
-
-
-predict = model.predict([[6]])
-print(f"PRedicted REsult is {predict}")
-
-
-plt.scatter(X,y)
-plt.plot(X,model.predict(X))
-plt.xlabel("Nums")
-plt.ylabel("PAss / Fail")
-plt.show()
-
-Practical 04 - Kmeans Clustering
-
-from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
-
-X = [[23,25],[46,40],[53,59],[60,67],[25,30]]
-
-kmeans = KMeans(n_clusters=3)
-kmeans.fit(X)
-
-print(kmeans.labels_)
-
-plt.scatter([x[0] for x in X], [x[1] for x in X],c=kmeans.labels_)
-plt.show()
-
-
-
-
-Practical 05 - SVM and Decision Tree
-
-SVM -
-from sklearn import svm
-
-
-X = [[150,7],[170,8],[130,6],[140,6.5]]
-Y = ["Apples","Apples","Oranges","Oranges"]
-
-
-model = svm.SVC(kernel="linear")
-model.fit(X,Y)
-
-
-print(model.predict([[135,6]]))
-
-Decision Tree -
-from sklearn.tree import DecisionTreeClassifier
-
-X = [[150,7],[170,8],[130,6],[140,6.5]]
-Y = ["Apples","Apples","Oranges","Oranges"]
-
-model = DecisionTreeClassifier()
-model.fit(X,Y)
-
-print(model.predict([[135,6]]))
-
-
-Practical 06 - Handwriting Analysis using Keras
-
-Pip install -u tenserflow
-
-from tensorflow.keras.datasets import mnist
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Flatten
-
-
-(X_train, y_train), (X_test, y_test) = mnist.load_data()
-
-
-# Normalize data
-X_train = X_train / 255.0
-X_test = X_test / 255.0
-
-
-model = Sequential([
-    Flatten(input_shape=(28,28)),
-    Dense(128, activation="relu"),
-    Dense(10, activation="softmax")
-])
-
-
-model.compile(
-    optimizer="adam",
-    loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"])
-
-
-model.fit(X_train, y_train, epochs=5)
-model.evaluate(X_test, y_test)
-
-
-
-
-Practical 07 - Sentiment Analysis
-
-Pip install -U textblob
-
-from textblob import TextBlob
-text = "This mobile phone is excellent and very easy to use."
-analysis = TextBlob(text)
-
-print("Sentiment Polarity:", analysis.sentiment.polarity)
-
-if analysis.sentiment.polarity > 0:
-    print("Positive Sentiment")
-elif analysis.sentiment.polarity < 0:
-    print("Negative Sentiment")
-else:
-    print("Neutral Sentiment")
-
-
-Practical 08 - Performance of Classification (recall,precision,accuracy,confusion) tp,np,fp,np
-
-from sklearn.metrics import (
-    confusion_matrix,
-    recall_score,
-    precision_score,
-    accuracy_score,
-)
-
-y_true = [1, 0, 1, 1, 1, 0, 1, 1, 0]
-y_pred = [1, 0, 1, 1, 1, 0, 1, 1, 0]
-
-print(f"Confussion matrix {confusion_matrix(y_true, y_pred)}")
-print(f"Recall Score {recall_score(y_true, y_pred)}")
-print(f"Percision Score {precision_score(y_true, y_pred)}")
-print(f"Accuracy Score {accuracy_score(y_true, y_pred)}")
-
-
-Practical 09 - Cross Validation and Hyper parameter Tuning
-
-from sklearn.datasets import load_iris
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import GridSearchCV
-
-data = load_iris()
-
-X = data.data
-Y = data.target
-
-model = KNeighborsClassifier()
-
-param_grid = {"n_neighbors": [3,5,7,9]}
-grid = GridSearchCV(model,param_grid,cv=5)
-grid.fit(X,Y)
-
-print(f"Best Parameter : {grid.best_params_}")
-print(f"Best Score : {grid.best_score_}")
-
-
-
-Practical 10 -Prediction
-
-pip install -U scikit-learn
-pip install pandas
-
-from sklearn.linear_model import LinearRegression
-import pandas as pd
-data = {
-   
-    "Area" : [1000,1500,1800,2400],
-    "Bedroom" :[2,3,3,4],
-    "Bathroom" :[2,2,3,4],
-    "Price" : [350000,380000,400000,450000]
-}
-
-df = pd.DataFrame(data)
-
-x = df[["Area","Bedroom","Bathroom"]]
-y = df["Price"]
-
-model  = LinearRegression()
-model.fit(x,y)
-
-new_house = pd.DataFrame({"Area" : [1600], "Bedroom" : [3],"Bathroom" : [2]})
-predict = model.predict(new_house)
-
-print(f"Predicition is {predict[0]}")
-
-
+Step 4: Testing the Workflow
+Manufacturer: Use "Create Product" to register a new item
+Distributor: Use "Ship Product" to update shipment status
+Retailer: Confirm delivery using "Deliver Product"
+Customer: Use "Get Product Info" to verify the product's journey
