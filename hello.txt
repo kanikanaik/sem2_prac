@@ -670,3 +670,67 @@ Manufacturer: Use "Create Product" to register a new item
 Distributor: Use "Ship Product" to update shipment status
 Retailer: Confirm delivery using "Deliver Product"
 Customer: Use "Get Product Info" to verify the product's journey
+
+VIVA QUESTION - 
+
+1. Why is blockchain useful in supply chain?
+Blockchain provides end-to-end traceability. In traditional systems, data is siloed in private databases, making it easy to forge records. Blockchain allows verification of a product's entire journey from manufacturing to delivery, ensuring authenticity and reducing fraud.
+
+2. What are smart contracts in finance?
+Smart contracts are self-executing programs with agreement terms written directly into code. In finance, they automate processes like loan approvals, insurance payouts, and cross-border payments, eliminating manual invoicing and third-party escrow.
+
+3. What is decentralization?
+Decentralization refers to distributing authority and data across a peer-to-peer network. Every node in the blockchain network maintains a copy of the ledger, ensuring no single entity can change rules or shut down the system unilaterally.
+
+4. What are limitations of blockchain?
+Scalability: Public blockchains can be slow and expensive for high transaction volumes
+Complexity: Integrating legacy systems requires specialized technical knowledge
+Privacy: Transaction details on public ledgers may be visible to all participants
+
+1. What is a DApp?
+A DApp (Decentralized Application) is an application that operates on a blockchain or peer-to-peer network rather than a single centralized server. Its backend logic is governed by smart contracts, ensuring transparency, security, and resistance to censorship.
+
+2. What is the role of MetaMask?
+MetaMask serves as a bridge (provider) that allows a browser to interact with the Ethereum blockchain. It provides identity management (account addresses) and transaction signing (approving transactions before sending to the network).
+
+3. Difference between Web2 and Web3?
+Web2: Data is owned and managed by centralized companies on private servers.
+Web3: Data is stored on decentralized blockchains where users have full ownership and interact through trustless smart contracts.
+4. What is gas in Ethereum?
+Gas is a unit measuring the computational effort required to execute operations on Ethereum. Every transaction requires a fee paid in ETH to compensate validators for processing and securing the transaction.
+
+Viva Questions
+1. What is a consensus mechanism?
+A consensus mechanism is a process used in blockchain to ensure all nodes agree on the same data or ledger state. It maintains trust without a central authority and helps validate transactions and prevent fraud.
+
+2. What is the role of validators?
+Validators are participants who verify transactions and vote or propose new blocks in the blockchain. They ensure that only valid data is added to the ledger. Their role is crucial for network security.
+
+3. What is majority consensus?
+Majority consensus means more than 50% of validators agree on a decision or block. Once the majority approves, the transaction is considered valid. It ensures fairness and prevents a single participant from controlling the system.
+
+4. What happens if consensus is not reached?
+If consensus is not reached, the block or transaction is rejected or not added to the blockchain. The network waits for agreement or retries the process. This prevents incorrect or malicious data from entering the system.
+
+5. Difference between PoW and PoS?
+Proof of Work (PoW): Requires solving complex mathematical problems (used by Bitcoin). High energy consumption.
+Proof of Stake (PoS): Selects validators based on their cryptocurrency stake (used by Ethereum). More energy-efficient and faster.
+Viva Questions
+1. What is a blockchain explorer?
+A blockchain explorer is a web tool used to view transactions, blocks, and wallet details on a blockchain network. It provides transparency by allowing anyone to track activity on the network.
+
+2. What is a block in blockchain?
+A block is a container that stores a group of verified transactions. Each block is linked to the previous one using a cryptographic hash, forming a chain. It ensures data integrity and security.
+
+3. What is a transaction hash?
+A transaction hash (Tx Hash) is a unique identifier for every transaction on the blockchain. It is generated using cryptographic algorithms and helps users track and verify transaction details.
+
+4. What information does a block contain?
+A block contains transaction data, a timestamp, a nonce, the hash of the previous block, and its own unique hash. This structure ensures the chain remains secure and tamper-proof.
+
+5. What is gas fee?
+A gas fee is the cost required to perform a transaction or execute a smart contract on a blockchain. It is paid to network validators for processing work and is measured in gwei (1 ETH = 10^9 gwei).
+
+6. Why are testnets used?
+Testnets are separate blockchain networks used for testing without real money. Developers use them to test smart contracts and applications safely before deploying on the main network.
+
